@@ -17,6 +17,17 @@ ICONS = {"general":"✓", "idea":"💡", "food":"☕", "work":"▣", "sport":"�
 def healthz(request):
     return JsonResponse({"status": "ok"})
 
+def csrf_failure(request, reason=""):
+    """Evita dejar a la persona atrapada en la página técnica 403.
+
+    La siguiente carga recibe un token de sesión nuevo para que pueda reenviar
+    el formulario normalmente, sin desactivar la protección CSRF.
+    """
+    request.session.flush()
+    response = redirect("login")
+    response.delete_cookie("csrftoken")
+    return response
+
 def manifest(request):
     return JsonResponse({"name": "Tareas Recurrentes", "short_name": "Tareas", "start_url": "/", "display": "standalone", "background_color": "#9e62e6", "theme_color": "#9e62e6", "icons": [{"src": "/pwa/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any"}, {"src": "/pwa/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any"}]}, content_type="application/manifest+json")
 

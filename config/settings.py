@@ -9,6 +9,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"] + [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()]
 CSRF_TRUSTED_ORIGINS = list({
     "https://tareitas.onrender.com",
+    "https://*.onrender.com",
     *[f"https://{host}" for host in ALLOWED_HOSTS if host not in {"127.0.0.1", "localhost", "testserver"}],
     *[origin.strip() for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()],
 })
@@ -19,6 +20,9 @@ if not DEBUG:
 # En Render, mantener el token dentro de la sesión evita que una cookie CSRF
 # antigua de un despliegue anterior invalide los formularios nuevos.
 CSRF_USE_SESSIONS = True
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "tasks.views.csrf_failure"
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles", "tasks",
