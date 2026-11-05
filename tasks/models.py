@@ -1,4 +1,5 @@
 from datetime import date
+from django.conf import settings
 from django.db import models
 
 class Task(models.Model):
@@ -11,6 +12,7 @@ class Task(models.Model):
         MUSIC = "music", "Música"
 
     title = models.CharField("nombre", max_length=160)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True)
     description = models.TextField("descripción", blank=True)
     category = models.CharField(max_length=12, choices=Category.choices, default=Category.GENERAL)
     start_date = models.DateField("fecha de inicio", default=date.today)

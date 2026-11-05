@@ -1,4 +1,7 @@
 from datetime import date, timedelta
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_date
@@ -27,32 +30,45 @@ def pwa_icon(request, size):
 def selected_day(request):
     return parse_date(request.GET.get("day", "")) or date.today()
 
+def register(request):
+    form = UserCreationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save(); login(request, user); return redirect("dashboard")
+    return render(request, "tasks/register.html", {"form": form})
+
+@login_required
 def dashboard(request):
     day = selected_day(request)
-    tasks = [task for task in Task.objects.filter(active=True) if task.is_due_on(day)]
+    tasks = [task for task in Task.objects.filter(active=True, owner=request.user) if task.is_due_on(day)]
     completed = set(Completion.objects.filter(day=day).values_list("task_id", flat=True))
     week = [day + timedelta(days=offset) for offset in range(-2, 3)]
     return render(request, "tasks/dashboard.html", {"day": day, "tasks": tasks, "completed": completed, "week": week, "icons": ICONS})
 
+@login_required
 def categories(request):
-    counts = {value: Task.objects.filter(category=value, active=True).count() for value, _ in Task.Category.choices}
+    counts = {value: Task.objects.filter(category=value, active=True, owner=request.user).count() for value, _ in Task.Category.choices}
     return render(request, "tasks/categories.html", {"choices": Task.Category.choices, "counts": counts, "icons": ICONS})
 
+@login_required
 def task_create(request, category):
     form = TaskForm(request.POST or None, initial={"category": category, "start_date": date.today()})
-    if request.method == "POST" and form.is_valid(): form.save(); return redirect("dashboard")
+    if request.method == "POST" and form.is_valid():
+        task = form.save(commit=False); task.owner = request.user; task.save(); return redirect("dashboard")
     return render(request, "tasks/task_form.html", {"form": form, "category": category, "icon": ICONS.get(category, "✓"), "editing": False})
 
+@login_required
 def task_edit(request, pk):
-    task = get_object_or_404(Task, pk=pk); form = TaskForm(request.POST or None, instance=task)
+    task = get_object_or_404(Task, pk=pk, owner=request.user); form = TaskForm(request.POST or None, instance=task)
     if request.method == "POST" and form.is_valid(): form.save(); return redirect("dashboard")
     return render(request, "tasks/task_form.html", {"form": form, "category": task.category, "icon": ICONS.get(task.category, "✓"), "editing": True})
 
+@login_required
 def calendar_view(request):
     return render(request, "tasks/calendar.html", {"day": selected_day(request)})
 
+@login_required
 def toggle_completion(request, pk):
-    task = get_object_or_404(Task, pk=pk); day = parse_date(request.POST.get("day", "")) or date.today()
+    task = get_object_or_404(Task, pk=pk, owner=request.user); day = parse_date(request.POST.get("day", "")) or date.today()
     completion, created = Completion.objects.get_or_create(task=task, day=day)
     if not created: completion.delete()
     return redirect(f"/?day={day.isoformat()}")
