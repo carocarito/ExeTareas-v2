@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "solo-desarrollo-local-cambiar-antes-de-publicar")
-ACCOUNT_RECOVERY_CODE = os.environ.get("ACCOUNT_RECOVERY_CODE", "")
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"] + [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()]
 CSRF_TRUSTED_ORIGINS = list({
@@ -56,3 +55,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.resend.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "resend"
+EMAIL_HOST_PASSWORD = os.environ.get("RESEND_API_KEY", "")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "")
+PASSWORD_RESET_TIMEOUT = 60 * 60
