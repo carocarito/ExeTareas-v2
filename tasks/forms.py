@@ -11,7 +11,8 @@ class TaskForm(forms.ModelForm):
         fields = ["title", "description", "category", "start_date", "end_date", "start_time", "end_time", "interval_days"]
         widgets = {"start_date": forms.DateInput(attrs={"type": "date"}), "end_date": forms.DateInput(attrs={"type": "date"}),
                    "start_time": forms.TimeInput(attrs={"type": "time"}), "end_time": forms.TimeInput(attrs={"type": "time"}),
-                   "description": forms.Textarea(attrs={"rows": 3})}
+                   "title": forms.TextInput(attrs={"placeholder": "Nombre"}),
+                   "description": forms.Textarea(attrs={"rows": 3, "placeholder": "Descripción de la tarea..."})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

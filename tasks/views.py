@@ -34,6 +34,22 @@ def pwa_icon(request, size):
 def selected_day(request):
     return parse_date(request.GET.get("day", "")) or date.today()
 
+def month_grid(day, destination):
+    """Datos reutilizables para una cuadrícula mensual cuyos días son enlaces."""
+    month_start = day.replace(day=1)
+    previous_month = (month_start - timedelta(days=1)).replace(day=1)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+    weeks = []
+    for week in month_calendar.Calendar(firstweekday=0).monthdatescalendar(day.year, day.month):
+        weeks.append([{
+            "date": current,
+            "current_month": current.month == day.month,
+            "selected": current == day,
+            "url": f"{destination}?day={current.isoformat()}",
+        } for current in week])
+    months = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+    return {"weeks": weeks, "month_title": f"{months[day.month - 1]} {day.year}", "previous_month": previous_month, "next_month": next_month}
+
 def register(request):
     form = UserCreationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -68,36 +84,23 @@ def categories(request):
 
 @login_required
 def task_create(request, category):
-    form = TaskForm(request.POST or None, initial={"category": category, "start_date": date.today()})
+    selected = selected_day(request)
+    form = TaskForm(request.POST or None, initial={"category": category, "start_date": selected})
     if request.method == "POST" and form.is_valid():
         task = form.save(commit=False); task.owner = request.user; task.save(); return redirect("dashboard")
-    return render(request, "tasks/task_form.html", {"form": form, "category": category, "icon": ICONS.get(category, "✓"), "editing": False})
+    calendar_data = month_grid(selected, reverse("task_create", args=[category]))
+    return render(request, "tasks/task_form.html", {"form": form, "category": category, "icon": ICONS.get(category, "✓"), "editing": False, "selected_day": selected, **calendar_data})
 
 @login_required
 def task_edit(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user); form = TaskForm(request.POST or None, instance=task)
     if request.method == "POST" and form.is_valid(): form.save(); return redirect("dashboard")
-    return render(request, "tasks/task_form.html", {"form": form, "category": task.category, "icon": ICONS.get(task.category, "✓"), "editing": True})
+    return render(request, "tasks/task_form.html", {"form": form, "category": task.category, "icon": ICONS.get(task.category, "✓"), "editing": True, **month_grid(task.start_date, reverse("task_edit", args=[task.pk]))})
 
 @login_required
 def calendar_view(request):
     day = selected_day(request)
-    month_start = day.replace(day=1)
-    previous_month = (month_start - timedelta(days=1)).replace(day=1)
-    next_month = (month_start + timedelta(days=32)).replace(day=1)
-    weeks = []
-    for week in month_calendar.Calendar(firstweekday=0).monthdatescalendar(day.year, day.month):
-        weeks.append([{
-            "date": current,
-            "current_month": current.month == day.month,
-            "selected": current == day,
-            "url": f"{reverse('dashboard')}?day={current.isoformat()}",
-        } for current in week])
-    months = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
-    return render(request, "tasks/calendar.html", {
-        "day": day, "weeks": weeks, "month_title": f"{months[day.month - 1]} {day.year}",
-        "previous_month": previous_month, "next_month": next_month,
-    })
+    return render(request, "tasks/calendar.html", {"day": day, **month_grid(day, reverse("dashboard"))})
 
 @login_required
 def pomodoro(request):
