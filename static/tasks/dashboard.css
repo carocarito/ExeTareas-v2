@@ -1,0 +1,1 @@
+.content{position:relative}.add-task-fab{position:absolute;right:28px;bottom:25px;display:grid;place-items:center;width:60px;height:60px;border-radius:16px;background:var(--accent);color:#fff;text-decoration:none;font-size:42px;font-weight:300;line-height:1;box-shadow:0 8px 18px #0003}.add-task-fab:hover{filter:brightness(1.06);transform:translateY(-1px)}
