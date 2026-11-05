@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from uuid import uuid4
 from django.contrib.auth import get_user_model
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
@@ -45,6 +45,11 @@ def guest_login(request):
     user.set_unusable_password(); user.save(update_fields=["password"])
     login(request, user); request.session["guest_mode"] = True
     return redirect("dashboard")
+
+def logout_view(request):
+    """Cierra la sesión y siempre vuelve a la portada, incluso desde un enlace."""
+    logout(request)
+    return redirect("login")
 
 @login_required
 def dashboard(request):
