@@ -1,4 +1,6 @@
 from datetime import date, timedelta
+from uuid import uuid4
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -35,6 +37,14 @@ def register(request):
     if request.method == "POST" and form.is_valid():
         user = form.save(); login(request, user); return redirect("dashboard")
     return render(request, "tasks/register.html", {"form": form})
+
+def guest_login(request):
+    if request.method != "POST": return redirect("login")
+    User = get_user_model()
+    user = User.objects.create_user(username=f"invitado_{uuid4().hex[:12]}")
+    user.set_unusable_password(); user.save(update_fields=["password"])
+    login(request, user); request.session["guest_mode"] = True
+    return redirect("dashboard")
 
 @login_required
 def dashboard(request):
