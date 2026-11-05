@@ -7,7 +7,11 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "solo-desarrollo-local-cambiar-antes-de-publicar")
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"] + [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()]
-CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host not in {"127.0.0.1", "localhost", "testserver"}]
+CSRF_TRUSTED_ORIGINS = list({
+    "https://tareitas.onrender.com",
+    *[f"https://{host}" for host in ALLOWED_HOSTS if host not in {"127.0.0.1", "localhost", "testserver"}],
+    *[origin.strip() for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()],
+})
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
