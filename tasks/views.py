@@ -4,6 +4,8 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -75,10 +77,36 @@ def guest_login(request):
     login(request, user); request.session["guest_mode"] = True
     return redirect("dashboard")
 
+@csrf_exempt
 def logout_view(request):
     """Cierra la sesión y siempre vuelve a la portada, incluso desde un enlace."""
     logout(request)
     return redirect("login")
+
+@csrf_exempt
+def recover_password(request):
+    """Restablecimiento local protegido por un código privado de Render."""
+    error = ""
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        confirmation = request.POST.get("confirmation", "")
+        code = request.POST.get("recovery_code", "")
+        user = get_user_model().objects.filter(username__iexact=username).first()
+        if not settings.ACCOUNT_RECOVERY_CODE:
+            error = "La recuperación aún no está configurada en el servidor."
+        elif code != settings.ACCOUNT_RECOVERY_CODE:
+            error = "El código de recuperación no es válido."
+        elif not user:
+            error = "No existe una cuenta con ese usuario."
+        elif len(password) < 8:
+            error = "La nueva contraseña debe tener al menos 8 caracteres."
+        elif password != confirmation:
+            error = "Las contraseñas no coinciden."
+        else:
+            user.set_password(password); user.save(update_fields=["password"])
+            return redirect("login")
+    return render(request, "tasks/recover_password.html", {"error": error})
 
 @login_required
 def dashboard(request):
