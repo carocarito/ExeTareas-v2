@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task
+from .models import PomodoroSession, Task
 
 class TaskForm(forms.ModelForm):
     weekdays_select = forms.MultipleChoiceField(
@@ -29,3 +29,9 @@ class TaskForm(forms.ModelForm):
         task = super().save(commit=False); task.weekdays = ",".join(self.cleaned_data["weekdays_select"])
         if commit: task.save()
         return task
+
+class PomodoroForm(forms.ModelForm):
+    class Meta:
+        model = PomodoroSession
+        fields = ["task", "title", "work_minutes", "break_minutes", "cycles"]
+        labels = {"task": "Tarea guardada", "title": "O escribe un nombre", "work_minutes": "Minutos de trabajo", "break_minutes": "Minutos de descanso", "cycles": "Cantidad de ciclos"}

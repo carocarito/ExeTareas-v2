@@ -5,8 +5,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_date
-from .forms import TaskForm
-from .models import Completion, Task
+from .forms import PomodoroForm, TaskForm
+from .models import Completion, PomodoroSession, Task
 
 ICONS = {"general":"✓", "idea":"💡", "food":"☕", "work":"▣", "sport":"⚽", "music":"♫"}
 
@@ -65,6 +65,19 @@ def task_edit(request, pk):
 @login_required
 def calendar_view(request):
     return render(request, "tasks/calendar.html", {"day": selected_day(request)})
+
+@login_required
+def pomodoro(request):
+    form = PomodoroForm(request.POST or None)
+    form.fields["task"].queryset = Task.objects.filter(owner=request.user, active=True)
+    if request.method == "POST" and form.is_valid():
+        session = form.save(commit=False); session.owner = request.user
+        if not session.title.strip() and not session.task:
+            number = PomodoroSession.objects.filter(owner=request.user, created_at__date=date.today()).count() + 1
+            session.title = f"Ciclo Pomodoro {number}"
+        if not session.title.strip() and session.task: session.title = session.task.title
+        session.save(); return render(request, "tasks/pomodoro.html", {"form": form, "session": session})
+    return render(request, "tasks/pomodoro.html", {"form": form})
 
 @login_required
 def toggle_completion(request, pk):

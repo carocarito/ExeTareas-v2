@@ -41,3 +41,13 @@ class Completion(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["task", "day"], name="unique_completion_per_day")]
+
+class PomodoroSession(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pomodoros")
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="pomodoros")
+    title = models.CharField(max_length=160, blank=True)
+    work_minutes = models.PositiveSmallIntegerField(default=25)
+    break_minutes = models.PositiveSmallIntegerField(default=5)
+    cycles = models.PositiveSmallIntegerField(default=4)
+    completed_cycles = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
