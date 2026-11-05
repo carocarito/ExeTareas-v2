@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@supabase/server": "github:supabase/server"
+  }
+}

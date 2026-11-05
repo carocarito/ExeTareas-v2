@@ -1,0 +1,1 @@
+{% extends 'tasks/base.html' %}{% block content %}<section class="plain"><header><a href="{% url 'dashboard' %}">←</a><h1>Calendario</h1><span>◴</span></header><div class="calendar"><h2>{{ day|date:'F Y' }}</h2><form><input type="date" name="day" value="{{ day|date:'Y-m-d' }}"><button class="button violet">Ver tareas</button></form></div></section>{% endblock %}

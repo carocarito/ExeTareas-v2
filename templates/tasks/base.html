@@ -1,0 +1,2 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#9e62e6"><title>Tareas Recurrentes</title><link rel="manifest" href="{% url 'manifest' %}"><link rel="stylesheet" href="{% static 'tasks/styles.css' %}"></head><body><main class="app-shell">{% block content %}{% endblock %}</main><script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('{% url "service_worker" %}');</script></body></html>
