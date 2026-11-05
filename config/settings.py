@@ -16,6 +16,9 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+# En Render, mantener el token dentro de la sesión evita que una cookie CSRF
+# antigua de un despliegue anterior invalide los formularios nuevos.
+CSRF_USE_SESSIONS = True
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles", "tasks",
