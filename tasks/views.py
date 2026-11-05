@@ -1,3 +1,4 @@
+import calendar as month_calendar
 from datetime import date, timedelta
 from uuid import uuid4
 from django.contrib.auth import get_user_model
@@ -6,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.dateparse import parse_date
 from .forms import PomodoroForm, TaskForm
 from .models import Completion, PomodoroSession, Task
@@ -79,7 +81,23 @@ def task_edit(request, pk):
 
 @login_required
 def calendar_view(request):
-    return render(request, "tasks/calendar.html", {"day": selected_day(request)})
+    day = selected_day(request)
+    month_start = day.replace(day=1)
+    previous_month = (month_start - timedelta(days=1)).replace(day=1)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+    weeks = []
+    for week in month_calendar.Calendar(firstweekday=0).monthdatescalendar(day.year, day.month):
+        weeks.append([{
+            "date": current,
+            "current_month": current.month == day.month,
+            "selected": current == day,
+            "url": f"{reverse('dashboard')}?day={current.isoformat()}",
+        } for current in week])
+    months = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+    return render(request, "tasks/calendar.html", {
+        "day": day, "weeks": weeks, "month_title": f"{months[day.month - 1]} {day.year}",
+        "previous_month": previous_month, "next_month": next_month,
+    })
 
 @login_required
 def pomodoro(request):
@@ -99,4 +117,4 @@ def toggle_completion(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user); day = parse_date(request.POST.get("day", "")) or date.today()
     completion, created = Completion.objects.get_or_create(task=task, day=day)
     if not created: completion.delete()
-    return redirect(f"/?day={day.isoformat()}")
+    return redirect(f"{reverse('dashboard')}?day={day.isoformat()}")
